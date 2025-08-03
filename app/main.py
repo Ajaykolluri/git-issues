@@ -106,14 +106,14 @@ def save_csv(data: Iterator[dict], file_path: str) -> Optional[int]:
 
 def top_commentators(df: DataFrame, top_n_commentators: int = 10) -> Optional[DataFrame]:
     """
-    Calculates and returns the top N commentators from a PySpark DataFrame.
+    Calculates and returns the top N commenters from a PySpark DataFrame.
 
     Args:
         df: The PySpark DataFrame with a 'commenters' column.
-        top_n_commentators: The number of top commentators to show.
+        top_n_commenters: The number of top commenters to show.
 
     Returns:
-        A DataFrame with top commentators and their counts on success, or None on failure.
+        A DataFrame with top commenters and their counts on success, or None on failure.
     """
     try:
         # Define the schema for the array column
@@ -121,9 +121,9 @@ def top_commentators(df: DataFrame, top_n_commentators: int = 10) -> Optional[Da
         # Convert the string representation of the list to an actual array using from_json
         df_processed = df.withColumn("evaluated_array", from_json(col("commenters"), array_schema))
 
-        # Explode the array to get one row per commentator
-        top_ten_names = df_processed.select(explode("evaluated_array").alias("commentator")) \
-            .groupBy("commentator") \
+        # Explode the array to get one row per commenter
+        top_ten_names = df_processed.select(explode("evaluated_array").alias("commenter")) \
+            .groupBy("commenter") \
             .count() \
             .orderBy(desc("count")) \
             .limit(top_n_commentators)
@@ -232,13 +232,13 @@ def issue_duration_sql(df: DataFrame) -> Optional[DataFrame]:
         # Register the DataFrame as a temporary SQL view
         df.createOrReplaceTempView("issues")
         query = """
-                SELECT DATE_FORMAT(closed_at, 'yyyy-MM')                                          AS year_month, \
-                       CEIL(AVG((UNIX_TIMESTAMP(closed_at) - UNIX_TIMESTAMP(created_at)) / 3600)) AS avg_closing_hours, \
-                       CEIL(AVG(DATEDIFF(closed_at, created_at)))                                 AS avg_closing_days
+                SELECT DATE_FORMAT(closed_at, 'yyyy-MM') AS year_month,
+                       CEIL(AVG((UNIX_TIMESTAMP(closed_at) - UNIX_TIMESTAMP(created_at)) / 3600)) AS avg_closing_hours,
+                       CEIL(AVG(DATEDIFF(closed_at, created_at))) AS avg_closing_days
                 FROM issues
                 WHERE closed_at IS NOT NULL
                 GROUP BY year_month
-                ORDER BY year_month \
+                ORDER BY year_month 
                 """
         logging.info("Running SQL query for issue duration...")
         result_df = spark.sql(query)
@@ -259,6 +259,8 @@ def main():
         choices=['scrape-issues', 'top-n-commenters', 'issue-duration', 'mom_pert_change', 'sql-query', 'all'],
         help="The task to run. 'all' runs all available tasks."
     )
+    parser.add_argument(
+        "--top_n_commenters", type =int, default=10, help="The number of commenters records to show.")
     args = parser.parse_args()
     logging.info(f"CLI tool started with command: '{args.command}'")
 
@@ -282,7 +284,7 @@ def main():
         logging.info("--- Running All Tasks ---")
 
         # Capture and display the returned DataFrames
-        top_commentators_df = top_commentators(spark_df)
+        top_commentators_df = top_commentators(spark_df,args.Top_n_commenters)
         if top_commentators_df:
             logging.info("Top commentators analysis completed. Showing results:")
             top_commentators_df.show(truncate=False)
@@ -304,7 +306,7 @@ def main():
 
         logging.info("--- All Tasks Completed ---")
     elif args.command == 'top-n-commenters':
-        top_commentators_df = top_commentators(spark_df)
+        top_commentators_df = top_commentators(spark_df, args.top_n_commenters)
         if top_commentators_df:
             top_commentators_df.show(truncate=False)
     elif args.command == 'issue-duration':

@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "git-issues"
+version = "0.1.0"
+description = ""
+authors = ["ababu-mdsol <ababu@mdsol.com>"]
+readme = "README.md"
+packages = [{include = "main.py", from = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.3.1"
+pygithub = "^2.7.0"
+pydantic = "^2.11.7"
+pyspark = "^4.0.0"
+loguru = "^0.7.3"
+notebook = "^7.4.4"
+pydantic-settings = "^2.10.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+issues = "app.main:main"
+#issues = "app.main:"
