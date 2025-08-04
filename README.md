@@ -92,7 +92,7 @@ The tool is executed from the command line using `poetry run`. You must use the 
     poetry run python main.py --command "all" --csvpath "requests_issues.csv"
     ```
 
-3.  **Run a specific analysis (e.g., top commentators):**
+3.  **Run a specific analysis (e.g., top commenters):**
 
     ```bash
     poetry run python main.py --command "top-n-commenters" --top_n_commeters 10 --csvpath "requests_issues.csv"
